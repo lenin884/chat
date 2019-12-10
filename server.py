@@ -34,7 +34,7 @@ class ServerProtocol(LineOnlyReceiver):
             if content.startswith("login:"):
                 self.login = content.replace("login:", "")
                 if self.login in [user.login for user in self.factory.clients if user is not self]:
-                    self.sendLine("Login is Unused".encode())
+                    self.sendLine("Login is used".encode())
                     self.transport.loseConnection()
                 else:
                     self.sendLine(f"Welcome {self.login}!".encode())
