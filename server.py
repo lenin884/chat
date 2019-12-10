@@ -12,10 +12,10 @@ class ServerProtocol(LineOnlyReceiver):
     def connectionMade(self):
         # Потенциальный баг для внимательных =)
         self.messages = []
-        self.factory.clients.append(self)
 
     def connectionLost(self, reason=connectionDone):
-        self.factory.clients.remove(self)
+        if self in self.factory.clients:
+            self.factory.clients.remove(self)
 
     def lineReceived(self, line: bytes):
         content = line.decode()
@@ -34,10 +34,11 @@ class ServerProtocol(LineOnlyReceiver):
             if content.startswith("login:"):
                 self.login = content.replace("login:", "")
                 if self.login in [user.login for user in self.factory.clients if user is not self]:
-                    self.sendLine("Login is used".encode())
+                    self.sendLine(f"Login {self.login} busy, try another".encode())
                     self.transport.loseConnection()
                 else:
                     self.sendLine(f"Welcome {self.login}!".encode())
+                    self.factory.clients.append(self)
                     self.send_history()
             else:
                 self.sendLine("Invalid login".encode())
